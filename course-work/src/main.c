@@ -144,15 +144,30 @@ void remove_project(const char* project_name) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     srand(time(NULL));
-    pull_project("NewProject", "commit_all");
-    //standart_working_dir();
-    //create_project("NewProject");
-    //bind_project("NewProject", "/home/pahan/test");
-    //commit_real_project("NewProject");
-    //remove_project("NewProject");
-    //restore_file("/home/pahan/test/testingfile.txt", "/home/pahan/test/filesave.txt");
-    //comparison_files("/home/pahan/test/testing/File1.txt", "/home/pahan/test/testing/File2.txt", "/home/pahan/test/testing/File3.txt", "commit1");
+
+    if (argc < 2) {
+        printf("Usage: %s <command> [args]\n", argv[0]);
+        return 1;
+    }
+
+    if (strcmp(argv[1], "standart_working_dir") == 0) {
+        standart_working_dir();
+    } else if (strcmp(argv[1], "create") == 0 && argc == 3) {
+        create_project(argv[2]);
+    } else if (strcmp(argv[1], "bind") == 0 && argc == 4) {
+        bind_project(argv[2], argv[3]);
+    } else if (strcmp(argv[1], "commit") == 0 && argc == 3) {
+        commit_real_project(argv[2]);
+    } else if (strcmp(argv[1], "pull") == 0 && argc == 4) {
+        pull_project(argv[2], argv[3]);
+    } else if (strcmp(argv[1], "remove") == 0 && argc == 3) {
+        remove_project(argv[2]);
+    } else {
+        printf("Unknown command or incorrect number of arguments.\n");
+        return 1;
+    }
+
     return 0;
 }
