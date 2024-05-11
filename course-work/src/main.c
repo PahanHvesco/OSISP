@@ -80,7 +80,7 @@ void commit_real_project(const char* project_name) {
 
 
      if(there_is_dir(patch_to_dir) && there_is_file(patch_to_file)) {
-         printf("%s\n", patch_to_file);
+
         if(there_is_file(patch_to_file)) {
 
             FILE* file = fopen(patch_to_file, "r");
@@ -89,34 +89,42 @@ void commit_real_project(const char* project_name) {
                 int array_size = 0;
                 fclose(file);
 
+
+
                 while (strchr(real_project_path, '\n') != NULL) *strchr(real_project_path, '\n') = '\0';
+
                 dirwalk(real_project_path, array_path, &array_size);
-                record_to_settings(patch_to_file, name_commit, array_path, array_size);
 
-                struct stat info_dir;
-                for(int i = 0; i < array_size; i++) {
-                    char path_to_projects_dir[512];
-                    stat(array_path[i], &info_dir);
-                    if (S_ISDIR(info_dir.st_mode)) {
-                        sprintf(path_to_projects_dir, "%s%s", patch_to_dir, remove_substring(array_path[i], real_project_path));
-                        create_dir(path_to_projects_dir);
-                    }
-                }
+                if(comparison_project_and_real_dir(real_project_path, patch_to_dir) == 0) {
+                    record_to_settings(patch_to_file, name_commit, array_path, array_size);
 
-                struct stat info_file;
-                for(int i = 0; i < array_size; i++) {
-                    char path_to_projects_file[512];
-                    char real_path_to_project[512];
-                    stat(array_path[i], &info_file);
-                    if (S_ISDIR(info_file.st_mode)) {
-                        continue;
-                    } else if (S_ISREG(info_file.st_mode)) {
-                        sprintf(path_to_projects_file, "%s%s", patch_to_dir, remove_substring(array_path[i], real_project_path));
-                        create_file(path_to_projects_file);
-                        sprintf(real_path_to_project, "%s%s", real_project_path, array_path[i]);
-                        restore_file(path_to_projects_file, "/home/pahan/backup/file.txt", "commit_all");
-                        comparison_files("/home/pahan/backup/file.txt", array_path[i], path_to_projects_file, name_commit);
+                    struct stat info_dir;
+                    for(int i = 0; i < array_size; i++) {
+                        char path_to_projects_dir[512];
+                        stat(array_path[i], &info_dir);
+                        if (S_ISDIR(info_dir.st_mode)) {
+                            sprintf(path_to_projects_dir, "%s%s", patch_to_dir, remove_substring(array_path[i], real_project_path));
+                            create_dir(path_to_projects_dir);
+                        }
                     }
+
+                    struct stat info_file;
+                    for(int i = 0; i < array_size; i++) {
+                        char path_to_projects_file[512];
+                        char real_path_to_project[512];
+                        stat(array_path[i], &info_file);
+                        if (S_ISDIR(info_file.st_mode)) {
+                            continue;
+                        } else if (S_ISREG(info_file.st_mode)) {
+                            sprintf(path_to_projects_file, "%s%s", patch_to_dir, remove_substring(array_path[i], real_project_path));
+                            create_file(path_to_projects_file);
+                            sprintf(real_path_to_project, "%s%s", real_project_path, array_path[i]);
+                            restore_file(path_to_projects_file, "/home/pahan/backup/file.txt", "commit_all");
+                            comparison_files("/home/pahan/backup/file.txt", array_path[i], path_to_projects_file, name_commit);
+                        }
+                    }
+                } else {
+                    printf("Project sinhronised!!!\n");
                 }
             }
         } else {
@@ -143,6 +151,12 @@ void remove_project(const char* project_name) {
         remove_dir(path_to_project);
     }
 }
+//проверка всех проектов
+void check_all_projects(){
+    //char real_project_path[256];
+    //FILE* file = fopen(patch_to_file, "r");
+    //fgets(real_project_path, sizeof(real_project_path), file)
+}
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
@@ -164,6 +178,8 @@ int main(int argc, char *argv[]) {
         pull_project(argv[2], argv[3]);
     } else if (strcmp(argv[1], "remove") == 0 && argc == 3) {
         remove_project(argv[2]);
+    } else if (strcmp(argv[1], "check") == 0) {
+
     } else {
         printf("Unknown command or incorrect number of arguments.\n");
         return 1;

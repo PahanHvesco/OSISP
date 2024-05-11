@@ -39,3 +39,12 @@ char* remove_substring(const char* str, const char* substr) {
 
     return newStr;
 }
+
+char* copyString(const char* source) {
+    size_t length = strlen(source);
+    char* destination = (char*)malloc((length + 1) * sizeof(char)); // Выделение памяти для новой строки
+
+    strcpy(destination, source); // Копирование строки
+
+    return destination; // Возвращение новой строки
+}

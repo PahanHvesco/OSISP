@@ -8,6 +8,7 @@
 
 #include "my_string.h"
 #include "dir_file.h"
+#include "dirwalk.h"
 
 typedef struct{
     char action;
@@ -24,3 +25,4 @@ void remove_extra_changes(Change* change, int *count);
 void restore_file(const char* path_to_file_change, const char* path_to_file, const char* commit);
 void comparison_files(const char* file1_path, const char* file2_path, const char* output_path, const char* name_comit);
 void recovery_project(const char* path_to_settings, const char* path_to_project, const char* commit);
+int comparison_project_and_real_dir(const char* real_project_path, const char* project_path);

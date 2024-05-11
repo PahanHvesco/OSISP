@@ -183,10 +183,13 @@ void recovery_project(const char* path_to_settings, const char* path_to_project,
 
     file1 = fopen(path_to_settings, "r");
 
+    fgets(path_to_real_dir, sizeof(path_to_real_dir), file1);
+    while (strchr(path_to_real_dir, '\n') != NULL) *strchr(path_to_real_dir, '\n') = '\0';
+
     remove_dir(path_to_real_dir);
     create_dir(path_to_real_dir);
 
-    fgets(path_to_real_dir, sizeof(path_to_real_dir), file1);
+
     int commit_search = 0;
     while(fgets(line, sizeof(line), file1)) {
         if(strstr(line, last_commit)) {
@@ -198,25 +201,84 @@ void recovery_project(const char* path_to_settings, const char* path_to_project,
         } else if(commit_search == 1 && strcmp(line, "\n")){
             while (strchr(line, '\n') != NULL) *strchr(line, '\n') = '\0';
             while (strchr(path_to_real_dir, '\n') != NULL) *strchr(path_to_real_dir, '\n') = '\0';
-            printf("line: %s\n", line);
-            printf("path_to_real_dir: %s\n", path_to_real_dir);
 
             char real_path_to_project_file[256];
             sprintf(real_path_to_project_file, "%s", line);
-            printf("real_path_to_project_file: %s\n", real_path_to_project_file);
 
             char path[256];
             sprintf(path, "%s%s", path_to_project, remove_substring(line, path_to_real_dir));
-            printf("path: %s\n\n", path);
 
             struct stat info;
             stat(path, &info);
             if (S_ISDIR(info.st_mode)) {
-                printf("dir\n");
                 create_dir(line);
             } else if (S_ISREG(info.st_mode)) {
                 restore_file(path, real_path_to_project_file, commit);
             }
         }
     }
+}
+
+int comparison_project_and_real_dir(const char* real_project_path, const char* project_path) {
+    char* array_real_project[MAX_FILES];
+    int array_size_real_project = 0;
+
+    char* array_project[MAX_FILES];
+    int array_size_project = 0;
+
+    dirwalk(real_project_path, array_real_project, &array_size_real_project);
+    dirwalk(project_path, array_project, &array_size_project);
+
+    for(int i = 0; i<array_size_real_project; i++) {
+        char str1[256];
+        char str2[256];
+
+        sprintf(str1, "%s", remove_substring(array_real_project[i], real_project_path));
+
+        for(int j = 0; j<array_size_project; j++) {
+            sprintf(str2, "%s", remove_substring(array_project[j], project_path));
+
+            if(strcmp(str1, str2) == 0) {
+                struct stat info_file;
+                stat(array_real_project[i], &info_file);
+
+                if (S_ISDIR(info_file.st_mode)) {
+                    break;
+                } else if (S_ISREG(info_file.st_mode)) {
+                    restore_file(array_project[j], "/home/pahan/backup/file.txt", "commit_all");
+
+                    FILE* fp1 = fopen("/home/pahan/backup/file.txt", "r");
+                    FILE* fp2 = fopen(array_real_project[i], "r");
+
+                    if (fp1 == NULL || fp2 == NULL) {
+                        return 0;
+                    }
+
+                    int ch1, ch2;
+
+                    while ((ch1 = fgetc(fp1)) != EOF && (ch2 = fgetc(fp2)) != EOF) {
+                        if (ch1 != ch2) {
+                            fclose(fp1);
+                            fclose(fp2);
+                            return 0; //проект не синхрогизированн
+                        }
+                    }
+
+                    if (ch1 != EOF || ch2 != EOF) {
+                        fclose(fp1);
+                        fclose(fp2);
+                        if(ch1 == -1 && ch2 == 10)
+                            break;
+                        return 0; //проект не синхрогизированн
+                    }
+
+                    break;
+                }
+            } else if(j + 1 == array_size_project) {
+                printf("Project don't");
+                return 0; //проект не синхрогизированн
+            }
+        }
+    }
+    return 1;
 }
