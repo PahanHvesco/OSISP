@@ -12,14 +12,13 @@ void sort_changes(Change* changes, int count) {
 
 //Востановление файла по изменениям
 void restore_file(const char* path_to_file_change, const char* path_to_file, const char* commit) {
-    char line[256];
+    char line[1024];
 
     FILE* file_change = fopen(path_to_file_change, "r");
     if (file_change == NULL) {
         perror("Error opening file");
         return;
     }
-
     Change* changes = malloc(sizeof(Change));
     int count = 0;
     int commit_search = 0;
@@ -37,6 +36,12 @@ void restore_file(const char* path_to_file_change, const char* path_to_file, con
             changes[count].number_line = atoi(token);
             changes[count].line = malloc(256*sizeof(char));
             token = strtok(NULL, "|");
+            if (token != NULL) {
+                strcpy(changes[count].line, token);
+            } else {
+                fclose(file_change);
+                return;
+            }
             token[strcspn(token, "\n")] = '\0';
             strcpy(changes[count].line, token);
             count++;
@@ -44,9 +49,7 @@ void restore_file(const char* path_to_file_change, const char* path_to_file, con
     }
     fclose(file_change);
     sort_changes(changes, count);
-
     remove_extra_changes(changes, &count);
-
     create_file_by_change(path_to_file, changes, count);
 }
 
@@ -192,11 +195,12 @@ void recovery_project(const char* path_to_settings, const char* path_to_project,
 
     int commit_search = 0;
     while(fgets(line, sizeof(line), file1)) {
-        if(strstr(line, last_commit)) {
+        if(strstr(line, last_commit) || strstr(line, "commit")) {
             if(commit_search == 0 && strstr(line, last_commit)) {
+                printf("%s : %s\n", line, last_commit);
                 commit_search = 1;
             } else if(commit_search == 1 && strstr(line, "commit")) {
-                commit_search = 0;
+                break;
             }
         } else if(commit_search == 1 && strcmp(line, "\n")){
             while (strchr(line, '\n') != NULL) *strchr(line, '\n') = '\0';
@@ -212,8 +216,10 @@ void recovery_project(const char* path_to_settings, const char* path_to_project,
             stat(path, &info);
             if (S_ISDIR(info.st_mode)) {
                 create_dir(line);
+                //printf("Dir  pull %s\n", line);
             } else if (S_ISREG(info.st_mode)) {
                 restore_file(path, real_path_to_project_file, commit);
+                printf("File pull %s\n", real_path_to_project_file);
             }
         }
     }
@@ -229,15 +235,16 @@ int comparison_project_and_real_dir(const char* real_project_path, const char* p
     dirwalk(real_project_path, array_real_project, &array_size_real_project);
     dirwalk(project_path, array_project, &array_size_project);
 
+    if(array_size_project<1) {
+        return 0;
+    }
+
     for(int i = 0; i<array_size_real_project; i++) {
         char str1[256];
         char str2[256];
-
         sprintf(str1, "%s", remove_substring(array_real_project[i], real_project_path));
-
         for(int j = 0; j<array_size_project; j++) {
             sprintf(str2, "%s", remove_substring(array_project[j], project_path));
-
             if(strcmp(str1, str2) == 0) {
                 struct stat info_file;
                 stat(array_real_project[i], &info_file);
@@ -255,11 +262,11 @@ int comparison_project_and_real_dir(const char* real_project_path, const char* p
                     }
 
                     int ch1, ch2;
-
-                    while ((ch1 = fgetc(fp1)) != EOF && (ch2 = fgetc(fp2)) != EOF) {
+                    while ((ch1 = fgetc(fp2)) != EOF && (ch2 = fgetc(fp1)) != EOF) {
                         if (ch1 != ch2) {
                             fclose(fp1);
                             fclose(fp2);
+
                             return 0; //проект не синхрогизированн
                         }
                     }
@@ -267,15 +274,15 @@ int comparison_project_and_real_dir(const char* real_project_path, const char* p
                     if (ch1 != EOF || ch2 != EOF) {
                         fclose(fp1);
                         fclose(fp2);
-                        if(ch1 == -1 && ch2 == 10)
+                        if(ch1 == -1 && ch2 == 10) {
                             break;
+                        }
                         return 0; //проект не синхрогизированн
                     }
 
                     break;
                 }
             } else if(j + 1 == array_size_project) {
-                printf("Project don't");
                 return 0; //проект не синхрогизированн
             }
         }

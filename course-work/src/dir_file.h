@@ -5,6 +5,9 @@
 #include <time.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <errno.h>
+
 
 void create_dir(const char* path);
 void create_file(const char* path);

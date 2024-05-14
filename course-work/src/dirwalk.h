@@ -12,7 +12,7 @@
 #include <locale.h>
 #include <errno.h>
 
-#define MAX_FILES 1024
+#define MAX_FILES 65536
 
 typedef struct {
     char* array_patch[MAX_FILES];

@@ -20,7 +20,6 @@ void travels_directory(const char* path, char* array_path[], int* array_size) {
     DIR* directory = open_directory(path);
     struct stat info;
     struct dirent* dir;
-
     while((dir = readdir(directory)) != NULL) {
         char full_path[MAX_FILES];
         sprintf(full_path, "%s/%s", path, dir->d_name);

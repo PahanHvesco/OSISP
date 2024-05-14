@@ -9,8 +9,8 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
 HEADER_FILES = $(wildcard $(SRC_DIR)/*.h)
 DEBUG_OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(DEBUG_BUILD_DIR)/%.o,$(SRC_FILES))
 RELEASE_OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(RELEASE_BUILD_DIR)/%.o,$(SRC_FILES))
-DEBUG_EXEC = $(BUILD_DIR)/debug/my_program
-RELEASE_EXEC = $(BUILD_DIR)/release/my_program
+DEBUG_EXEC = $(BUILD_DIR)/debug/backup
+RELEASE_EXEC = $(BUILD_DIR)/release/backup
 
 .PHONY: all clean
 

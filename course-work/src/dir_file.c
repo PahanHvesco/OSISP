@@ -4,7 +4,6 @@
 void create_dir(const char* path) {
     if(access(path, F_OK) == -1) {
         if(mkdir(path, 0777) == -1) {
-            perror("Error creating dir");
         }
     }
 }
@@ -14,7 +13,6 @@ void create_file(const char* path) {
         FILE* file = fopen(path, "w");
 
         if(file == NULL) {
-            perror("Error creating file");
         }
         fclose(file);
     }
@@ -41,7 +39,6 @@ void remove_dir(const char* path) {
     int r;
 
     if (!d) {
-        perror("Не удалось открыть директорию");
         return;
     }
 
