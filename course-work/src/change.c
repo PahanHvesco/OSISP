@@ -197,7 +197,6 @@ void recovery_project(const char* path_to_settings, const char* path_to_project,
     while(fgets(line, sizeof(line), file1)) {
         if(strstr(line, last_commit) || strstr(line, "commit")) {
             if(commit_search == 0 && strstr(line, last_commit)) {
-                printf("%s : %s\n", line, last_commit);
                 commit_search = 1;
             } else if(commit_search == 1 && strstr(line, "commit")) {
                 break;
