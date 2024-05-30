@@ -1,35 +1,62 @@
-CXX = g++
-CXXFLAGS = -W -Wall -Wno-unused-parameter -Wno-unused-variable -std=c++17
-BUILD_DIR = build/debug
-RELEASE_DIR = build/release
+CC = gcc
+DEBUG_FLAGS = -g -ggdb -std=c11 -pedantic -W -Wall -Wextra
+RELEASE_FLAGS = -std=c11 -pedantic -W -Wall -Wextra -Werror
 SRC_DIR = src
+BUILD_DIR = build
+DEBUG_BUILD_DIR = $(BUILD_DIR)/debug
+RELEASE_BUILD_DIR = $(BUILD_DIR)/release
 
-all: server client
+CLIENT_SRC = $(SRC_DIR)/Client.c
+SERVER_SRC = $(SRC_DIR)/Server.c
+HEADER_FILES = $(wildcard $(SRC_DIR)/*.h)
 
-server: $(BUILD_DIR)/server_main.o $(BUILD_DIR)/Server.o
-	$(CXX) $(CXXFLAGS) -o $(BUILD_DIR)/server $(BUILD_DIR)/server_main.o $(BUILD_DIR)/Server.o
+DEBUG_CLIENT_OBJ = $(patsubst $(SRC_DIR)/%.c,$(DEBUG_BUILD_DIR)/%.o,$(CLIENT_SRC))
+RELEASE_CLIENT_OBJ = $(patsubst $(SRC_DIR)/%.c,$(RELEASE_BUILD_DIR)/%.o,$(CLIENT_SRC))
+DEBUG_SERVER_OBJ = $(patsubst $(SRC_DIR)/%.c,$(DEBUG_BUILD_DIR)/%.o,$(SERVER_SRC))
+RELEASE_SERVER_OBJ = $(patsubst $(SRC_DIR)/%.c,$(RELEASE_BUILD_DIR)/%.o,$(SERVER_SRC))
 
-client: $(BUILD_DIR)/client_main.o $(BUILD_DIR)/Client.o
-	$(CXX) $(CXXFLAGS) -o $(BUILD_DIR)/client $(BUILD_DIR)/client_main.o $(BUILD_DIR)/Client.o
+DEBUG_CLIENT_EXEC = $(DEBUG_BUILD_DIR)/Client
+RELEASE_CLIENT_EXEC = $(RELEASE_BUILD_DIR)/Client
+DEBUG_SERVER_EXEC = $(DEBUG_BUILD_DIR)/Server
+RELEASE_SERVER_EXEC = $(RELEASE_BUILD_DIR)/Server
 
-release: CXXFLAGS += -O2
-release: BUILD_DIR = $(RELEASE_DIR)
-release: server client
+.PHONY: all clean
 
-$(BUILD_DIR)/server_main.o: $(SRC_DIR)/server_main.cpp $(SRC_DIR)/Server.h | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/server_main.cpp -o $(BUILD_DIR)/server_main.o
+all: debug release
 
-$(BUILD_DIR)/client_main.o: $(SRC_DIR)/client_main.cpp $(SRC_DIR)/Client.h | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/client_main.cpp -o $(BUILD_DIR)/client_main.o
+debug: $(DEBUG_CLIENT_EXEC) $(DEBUG_SERVER_EXEC)
 
-$(BUILD_DIR)/Server.o: $(SRC_DIR)/Server.cpp $(SRC_DIR)/Server.h | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/Server.cpp -o $(BUILD_DIR)/Server.o
+release: $(RELEASE_CLIENT_EXEC) $(RELEASE_SERVER_EXEC)
 
-$(BUILD_DIR)/Client.o: $(SRC_DIR)/Client.cpp $(SRC_DIR)/Client.h | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/Client.cpp -o $(BUILD_DIR)/Client.o
+$(DEBUG_BUILD_DIR):
+	mkdir -p $@
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+$(RELEASE_BUILD_DIR):
+	mkdir -p $@
+
+$(DEBUG_CLIENT_OBJ): $(CLIENT_SRC) $(HEADER_FILES)
+	$(CC) $(DEBUG_FLAGS) -c $< -o $@
+
+$(RELEASE_CLIENT_OBJ): $(CLIENT_SRC) $(HEADER_FILES)
+	$(CC) $(RELEASE_FLAGS) -c $< -o $@
+
+$(DEBUG_SERVER_OBJ): $(SERVER_SRC) $(HEADER_FILES)
+	$(CC) $(DEBUG_FLAGS) -c $< -o $@
+
+$(RELEASE_SERVER_OBJ): $(SERVER_SRC) $(HEADER_FILES)
+	$(CC) $(RELEASE_FLAGS) -c $< -o $@
+
+$(DEBUG_CLIENT_EXEC): $(DEBUG_BUILD_DIR) $(DEBUG_CLIENT_OBJ)
+	$(CC) $(DEBUG_FLAGS) $(DEBUG_CLIENT_OBJ) -o $@
+
+$(RELEASE_CLIENT_EXEC): $(RELEASE_BUILD_DIR) $(RELEASE_CLIENT_OBJ)
+	$(CC) $(RELEASE_FLAGS) $(RELEASE_CLIENT_OBJ) -o $@
+
+$(DEBUG_SERVER_EXEC): $(DEBUG_BUILD_DIR) $(DEBUG_SERVER_OBJ)
+	$(CC) $(DEBUG_FLAGS) $(DEBUG_SERVER_OBJ) -o $@
+
+$(RELEASE_SERVER_EXEC): $(RELEASE_BUILD_DIR) $(RELEASE_SERVER_OBJ)
+	$(CC) $(RELEASE_FLAGS) $(RELEASE_SERVER_OBJ) -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)/*.o $(BUILD_DIR)/server $(BUILD_DIR)/client $(RELEASE_DIR)/*.o $(RELEASE_DIR)/server $(RELEASE_DIR)/client
+	rm -rf $(BUILD_DIR)

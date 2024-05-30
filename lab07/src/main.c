@@ -10,7 +10,6 @@
 #define COUNT_RECORDS 10
 #define MAXSIZE 256
 #define FNAME "file"
-
 struct record {
 char name[80];
 char address[80];
@@ -25,20 +24,18 @@ FILE *fdopen(int handle, char *mode);
   int numRecord;
   int firstPosition, secondPosition;
 
-
-struct record records[COUNT_RECORDS] = {
-    {"Sarah Johnson", "11 Maple Ave", 3},
-    {"Ethan Rodriguez", "098 Elm Rd", 1},
-    {"Ava Nguyen", "83 Cedar Ln", 2},
-    {"Lucas Hernandez", "15 Oak Blvd", 4},
-    {"Isabella Morales", "41 Pine St", 2},
-    {"Noah Ramirez", "88 Birch Ct", 1},
-    {"Mia Diaz", "87 Walnut Dr", 3},
-    {"Jacob Vargas", "009 Spruce Rd", 4},
-    {"Abigail Flores", "647 Maple Ter", 2},
-    {"William Castillo", "123 Elm Ct", 1}
-};
-
+  struct record records[COUNT_RECORDS] = {
+       {"John Smith", "123 Main St", 3},
+       {"Alice Johnson", "456 Elm St", 2},
+       {"Michael Williams", "789 Oak St", 4},
+       {"Emily Brown", "321 Pine St", 1},
+       {"Daniel Davis", "654 Maple St", 3},
+       {"Olivia Miller", "987 Cedar St", 2},
+       {"David Wilson", "135 Spruce St", 4},
+       {"Sophia Taylor", "468 Birch St", 1},
+       {"Joseph Anderson", "791 Walnut St", 3},
+       {"Emma Thomas", "123 Oak St", 2}
+   };
 
 void write_records(struct record *records) {
   FILE* f;
@@ -103,14 +100,15 @@ void clear_file() {
 
 void delay() {
   int value;
-  printf("Нажмите любую клавишу для продолжения: ");
+  printf("Enter any symbol to continue: ");
   scanf("%d", &value);
 }
 
 void menu(){
-  printf("1 - VIEW all students\n");
-  printf("2 - GET student bu number\n");
-  printf("e - EXIT\n");
+  printf("1 - write the list of students to a file\n");
+  printf("2 - display all students saved in the file\n");
+  printf("3 - get()\n");
+  printf("q - finish program\n");
 }
 
 bool equals(struct record record1, struct record record2) {
@@ -172,16 +170,19 @@ void save(struct record rec) {
   int fd = open(FNAME, O_RDWR);
   FILE* f = fdopen(fd, "rb+");
   struct flock lock;
+
   REC_SAV = rec;
   rec = modificate(rec);
   fseek(f, (numRecord-1)*sizeof(struct record), SEEK_SET);
   firstPosition = ftell(f);
   fseek(f, sizeof(struct record), SEEK_CUR);
   secondPosition = ftell(f);
+
   lock.l_type = F_WRLCK;
   lock.l_whence = SEEK_SET;
   lock.l_start = firstPosition;
   lock.l_len = secondPosition - firstPosition;
+
   if (fcntl(fd, F_SETLK, &lock) < 0)
   printf("Ошибка при:fcntl(fd, F_SETLK, F_WRLCK)(%s)\n",strerror(errno));
   fseek(f, firstPosition, SEEK_SET);
@@ -190,7 +191,7 @@ void save(struct record rec) {
     lock.l_type = F_UNLCK;
     if (fcntl(fd, F_SETLK, &lock) < 0)
     printf("Ошибка при:fcntl(fd, F_SETLK, F_UNLCK)(%s)\n",strerror(errno));
-    printf("Someone changed this data\n");
+    printf("Someone changed the post\n");
     sleep(1);
     save(REC_NEW);
   } else {
@@ -204,12 +205,10 @@ void save(struct record rec) {
   fclose(f);
 }
 
-
-
 void menu2(struct record rec) {
   int value;
-  printf("'1' - change data\n");
-  printf("'2' - Exit\n");
+  printf("'1' - modificate record\n");
+  printf("'2' - cancel\n");
   scanf("%d",&value);
   switch(value) {
     case 1:
@@ -228,26 +227,30 @@ int main() {
    while(1){
      menu();
      c = getchar();
-    write_records(records);
      switch(c) {
        case '1':
+       {
+           write_records(records);
+           break;
+       }
+       case '2':
        {
          system("clear");
          print_records();
          delay();
          break;
        }
-       case '2':
+       case '3':
        {
          system("clear");
-         printf("Enter number student: ");
+         printf("enter the number of the student information about whom you want to receive: ");
          scanf("%d", &numRecord);
          rec = get(numRecord-1);
          print_record(rec);
          menu2(rec);
          break;
        }
-       case 'e': exit(0);
+       case 'q': exit(0);
      }
      system("clear");
    }
