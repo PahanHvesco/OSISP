@@ -5,10 +5,14 @@
 #include <time.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "my_string.h"
 #include "dir_file.h"
 #include "dirwalk.h"
+
+#define MAX_PATH_LENGTH 256
+#define MAX_THREADS 8
 
 typedef struct{
     char action;

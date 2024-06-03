@@ -14,7 +14,7 @@
 
 
 #define BUFFER_SIZE 1024
-#define INFO_FILE "/home/pahan/tar_working_dir/Hvesco/OSISP/lab08-my/src/server_info.txt" // Имя файла с информацией о сервере
+#define INFO_FILE "/home/pahan/tar_working_dir/Hvesco/OSISP/lab08/src/server_info.txt" // Имя файла с информацией о сервере
 
 int server_socket;
 char root_dir[BUFFER_SIZE];

@@ -15,8 +15,9 @@
 #define PATH_TO_BACKUP "/home/pahan/backup"
 #define PATH_TO_SETTINGS "/home/pahan/backup/settings"
 #define PATH_TO_PROJECTS "/home/pahan/backup/projects"
-#define NUM_THREADS 4
+#define NUM_THREADS 2
 
+//сгенерировать коммит
 char* generate_commit() {
     char* commit_name = (char*)malloc(256 * sizeof(char));
     int random_number = rand() % 100000 + 1;
@@ -31,6 +32,7 @@ void standart_working_dir() {
     create_dir(PATH_TO_SETTINGS);
     printf("Creating standart dir finished\n");
 }
+
 //создание проекта
 void create_project(const char* project_name) {
     char patch[256];
@@ -40,6 +42,7 @@ void create_project(const char* project_name) {
     create_dir(patch);
     printf("Creating standart project finished\n");
 }
+
 //cвязать проект с реальным проектом
 void bind_project(const char* project_name, const char* real_project_dir_path) {
     char patch_to_dir[256];
@@ -72,7 +75,7 @@ void record_to_settings(const char* patch_to_file, const char* name_commit, char
     fclose(file);
 }
 
-//сохранение файлов
+//сохранение файлов и изменений в прокет
 void commit_real_project(const char* project_name) {
     char patch_to_dir[256];
     char patch_to_file[256];
@@ -145,6 +148,7 @@ void commit_real_project(const char* project_name) {
         perror("No such project");
     }
 }
+
 //достать изменения
 void pull_project(const char* project_name, const char* commit) {
     char patch_to_dir[256];
@@ -154,6 +158,7 @@ void pull_project(const char* project_name, const char* commit) {
     sprintf(patch_to_file, "%s%s%s%s", PATH_TO_SETTINGS, "/", project_name, ".settings");
     recovery_project(patch_to_file, patch_to_dir, commit);
 }
+
 //удаление прокекта
 void remove_project(const char* project_name) {
     char path_to_project[256];
@@ -163,7 +168,8 @@ void remove_project(const char* project_name) {
     }
     printf("Project deleted\n");
 }
-//проверка всех проектов
+
+//структура данных для потока
 typedef struct {
     char path_to_project[MAX_FILES];
     char path_to_settings[MAX_FILES];
@@ -171,6 +177,7 @@ typedef struct {
     char project_name[MAX_FILES];
 } ThreadData;
 
+//функция для проверки проекта в потоке
 void* process_project(void* arg) {
     ThreadData* data = (ThreadData*)arg;
 
@@ -199,6 +206,7 @@ void* process_project(void* arg) {
     pthread_exit(NULL);
 }
 
+//проверка всех проетков на синхронизацию
 void check_all_projects() {
     DIR* directory = opendir(PATH_TO_PROJECTS);
     if (directory == NULL) {
@@ -240,7 +248,6 @@ void check_all_projects() {
         }
     }
 
-    // Wait for the remaining threads to finish
     for (int i = 0; i < thread_count; i++) {
         pthread_join(threads[i], NULL);
     }
@@ -248,6 +255,7 @@ void check_all_projects() {
     closedir(directory);
 }
 
+//история коммитов
 void commit_history(const char* project_name) {
     char patch_to_file[256];
     char line[256];
@@ -264,6 +272,7 @@ void commit_history(const char* project_name) {
     }
 }
 
+//интерфейс
 void info() {
     printf("-----------------------------------------------------------------------------------------------------|\n");
     printf("|----> command <----|----> additional parameters <----|-------------> why is it needed <-------------|\n");

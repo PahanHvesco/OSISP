@@ -7,6 +7,7 @@ void create_dir(const char* path) {
         }
     }
 }
+
 //создание файла по пути
 void create_file(const char* path) {
     if(access(path, F_OK) == -1) {
@@ -17,6 +18,7 @@ void create_file(const char* path) {
         fclose(file);
     }
 }
+
 //есть ли папка
 int there_is_dir(const char* path) {
     if(access(path, F_OK) == -1) {
@@ -24,6 +26,7 @@ int there_is_dir(const char* path) {
     }
     return 1;
 }
+
 //есть ли файл
 int there_is_file(const char* path) {
     if(access(path, F_OK) == -1) {
@@ -31,6 +34,7 @@ int there_is_file(const char* path) {
     }
     return 1;
 }
+
 //удаление папки
 void remove_dir(const char* path) {
 

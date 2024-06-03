@@ -1,5 +1,6 @@
 #include "dirwalk.h"
 
+//открытие дирректории
 DIR* open_directory(const char *dirname) {
     DIR *dir = opendir(dirname);
     if (dir == NULL) {
@@ -9,6 +10,7 @@ DIR* open_directory(const char *dirname) {
     return dir;
 }
 
+//закрытие дирректории
 void close_directory(DIR *dir) {
     if (closedir(dir) != 0) {
         perror("Error closing directory");
@@ -16,6 +18,7 @@ void close_directory(DIR *dir) {
     }
 }
 
+//путешествие по дирректории
 void travels_directory(const char* path, char* array_path[], int* array_size) {
     DIR* directory = open_directory(path);
     struct stat info;
@@ -37,6 +40,7 @@ void travels_directory(const char* path, char* array_path[], int* array_size) {
     close_directory(directory);
 }
 
+//вывести файлы
 void print_files(char* array_path[], int array_size) {
     struct stat info;
 
@@ -50,6 +54,7 @@ void print_files(char* array_path[], int array_size) {
     }
 }
 
+//функция старта
 void dirwalk(char* path, char* array_path[], int* array_size) {
     travels_directory(path, array_path, array_size);
 }

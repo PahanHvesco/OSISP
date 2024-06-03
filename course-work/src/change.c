@@ -1,5 +1,6 @@
 #include "change.h"
 
+
 int compare_changes(const void* a, const void* b) {
     const Change* change1 = (const Change*)a;
     const Change* change2 = (const Change*)b;
@@ -53,6 +54,7 @@ void restore_file(const char* path_to_file_change, const char* path_to_file, con
     create_file_by_change(path_to_file, changes, count);
 }
 
+//Создание файла по изменениям
 void create_file_by_change(const char* path_to_file, Change* changes, int count) {
     FILE* file = fopen(path_to_file, "w");
     if (file == NULL) {
@@ -74,6 +76,7 @@ void create_file_by_change(const char* path_to_file, Change* changes, int count)
     fclose(file);
 }
 
+//удаление лишних изменений
 void remove_extra_changes(Change* change, int *count) {
     for(int i = 0; i < *count; i++) {
         if((i+1) <= *count) {
@@ -107,7 +110,6 @@ void remove_extra_changes(Change* change, int *count) {
     }
 }
 //..................................................................
-
 //добавления изменений в файл изменений
 void comparison_files(const char* file1_path, const char* file2_path, const char* output_path, const char* name_comit) {
     FILE* file1 = fopen(file1_path, "r");
@@ -192,7 +194,6 @@ void recovery_project(const char* path_to_settings, const char* path_to_project,
     remove_dir(path_to_real_dir);
     create_dir(path_to_real_dir);
 
-
     int commit_search = 0;
     while(fgets(line, sizeof(line), file1)) {
         if(strstr(line, last_commit) || strstr(line, "commit")) {
@@ -224,6 +225,7 @@ void recovery_project(const char* path_to_settings, const char* path_to_project,
     }
 }
 
+//проверка проекта и реальной дирректории на синхронизацию
 int comparison_project_and_real_dir(const char* real_project_path, const char* project_path) {
     char* array_real_project[MAX_FILES];
     int array_size_real_project = 0;
