@@ -14,13 +14,13 @@
 
 
 #define BUFFER_SIZE 1024
-#define INFO_FILE "/home/pahan/tar_working_dir/Hvesco/OSISP/lab08/src/server_info.txt" // Имя файла с информацией о сервере
+#define INFO_FILE "/home/pahan/tar_working_dir/Hvesco/OSISP/lab08/build/debug/server_info.txt"
 
 int server_socket;
 char root_dir[BUFFER_SIZE];
-char server_info[BUFFER_SIZE]; // Буфер для хранения информации о сервере
+char root_dir_one[BUFFER_SIZE];
+char server_info[BUFFER_SIZE];
 
-// Обработчик сигнала для корректного завершения работы сервера
 void handle_signal(int signal) {
     if (signal == SIGINT) {
         printf("\nОстановка сервера...\n");
@@ -61,15 +61,21 @@ void* handle_client(void* arg) {
         } else if (strncmp(buffer, "CD ", 3) == 0) {
             char* new_dir = buffer + 3;
             new_dir[strcspn(new_dir, "\n")] = '\0';
-            if (chdir(new_dir) == 0) {
-                if (getcwd(root_dir, sizeof(root_dir))) {
-                    const char* response = "Каталог изменен\n";
-                    send(client_socket, response, strlen(response), 0);
+
+            if (strcmp(new_dir, "..") != 0 || strcmp(root_dir, root_dir_one) > 0) {
+                if (chdir(new_dir) == 0) {
+                    if (getcwd(root_dir, sizeof(root_dir))) {
+                        const char* response = "Каталог изменен\n";
+                        send(client_socket, response, strlen(response), 0);
+                    } else {
+                        perror("getcwd");
+                    }
                 } else {
-                    perror("getcwd");
+                    const char* error = "Каталог не найден\n";
+                    send(client_socket, error, strlen(error), 0);
                 }
             } else {
-                const char* error = "Каталог не найден\n";
+                const char* error = "Вы не можете выйти за пределы корневой папки\n";
                 send(client_socket, error, strlen(error), 0);
             }
         } else if (strcmp(buffer, "LIST") == 0) {
@@ -79,10 +85,9 @@ void* handle_client(void* arg) {
                 char list[BUFFER_SIZE] = "";
                 while ((entry = readdir(dir)) != NULL) {
                     if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-                        continue; // Пропускаем текущий и родительский каталоги
+                        continue;
                     }
 
-                    // Получаем информацию о файле
                     struct stat file_stat;
                     char file_path[1300];
                     sprintf(file_path, "%s/%s", root_dir, entry->d_name);
@@ -91,19 +96,18 @@ void* handle_client(void* arg) {
                         break;
                     }
 
-                    // Формируем строку для отправки клиенту
                     strcat(list, entry->d_name);
                     if (S_ISDIR(file_stat.st_mode)) {
-                        strcat(list, "/"); // Добавляем '/' к каталогам
+                        strcat(list, "/");
                     } else if (S_ISLNK(file_stat.st_mode)) {
                         char link[BUFFER_SIZE];
                         ssize_t link_size = readlink(file_path, link, sizeof(link) - 1);
                         if (link_size != -1) {
                             link[link_size] = '\0';
                             if (link[0] == '/') {
-                                strcat(list, "-->> "); // Симлинк на симлинк
+                                strcat(list, "-->> ");
                             } else {
-                                strcat(list, "--> "); // Симлинк на файл
+                                strcat(list, "--> ");
                             }
                             strcat(list, link);
                         }
@@ -111,9 +115,6 @@ void* handle_client(void* arg) {
                     strcat(list, "\n");
                 }
                 closedir(dir);
-
-                printf("Hi:%s\n", list);
-                // Отправляем список файлов и каталогов клиенту
                 if(strlen(list) > 1) {
                     send(client_socket, list, strlen(list), 0);
                 } else {
@@ -140,10 +141,11 @@ int main(int argc, char* argv[]) {
     }
 
     strncpy(root_dir, argv[1], sizeof(root_dir) - 1);
+    strncpy(root_dir_one, argv[1], sizeof(root_dir_one) - 1);
     root_dir[sizeof(root_dir) - 1] = '\0';
+    root_dir_one[sizeof(root_dir_one) - 1] = '\0';
     chdir(root_dir);
 
-    // Загрузка информации о сервере из файла
     FILE* info_file = fopen(INFO_FILE, "r");
     if (info_file == NULL) {
         perror("fopen");
